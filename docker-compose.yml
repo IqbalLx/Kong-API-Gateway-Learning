@@ -1,0 +1,54 @@
+version: "3"
+
+services:
+  database:
+    container_name: auth-database
+    image: mongo
+    ports:
+      - 27017:27017
+    volumes:
+      - ./web-service/auth/database/db:/data/db
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+    env_file:
+      - ./web-service/auth/database/.env
+    
+  auth:
+    container_name: auth-service
+    build: ./web-service/auth/service
+    ports:
+      - 3000:3000
+    links:
+      - database
+    depends_on: 
+      - database
+    env_file: 
+      - ./web-service/auth/service/.env
+
+  helloworld-express:
+    container_name: helloworld-express
+    build: ./web-service/hello-world-expressjs
+    ports:
+      - 9000:9000
+  
+  helloworld-flask:
+    container_name: helloworld-flask
+    build: ./web-service/hello-world-flask
+    ports:
+      - 9001:9001
+  
+  kong:
+    container_name: api-gateway
+    image: kong:2.6.0-alpine
+    ports:
+      - 8001:8001
+      - 8000:8000
+      - 8443:8443
+    links:
+      - auth
+      - helloworld-express
+      - helloworld-flask
+    env_file: 
+      - ./api-gateway/.env
+    volumes: 
+      - ./api-gateway/config/kong.yml:/usr/local/kong/declarative/kong.yml

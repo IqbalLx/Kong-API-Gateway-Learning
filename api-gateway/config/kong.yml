@@ -1,0 +1,46 @@
+_format_version: "2.1"
+ 
+services:
+- name: auth-server
+  url: http://auth-service:3000/
+- name: hello-world-expressjs-server
+  url: http://helloworld-express:9000
+- name: hello-world-flask-server
+  url: http://helloworld-flask:9001
+
+routes:
+- name: auth-request
+  service: auth-server
+  paths:
+    - /auth
+- name: expressjs-request
+  service: hello-world-expressjs-server
+  paths:
+    - /express
+- name: flask-request
+  service: hello-world-flask-server
+  paths:
+    - /flask
+
+plugins:
+- name: jwt
+  service: hello-world-expressjs-server
+  enabled: true
+  config:
+    key_claim_name: kid
+    claims_to_verify:
+    - exp
+- name: jwt
+  service: hello-world-flask-server
+  enabled: true
+  config:
+    key_claim_name: kid
+    claims_to_verify:
+    - exp
+
+consumers:
+  - username: auth_server_issuer
+
+jwt_secrets:
+  - consumer: auth_server_issuer
+    secret: "secret-hash-brown-bear-market-rate-limit"
